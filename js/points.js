@@ -1,22 +1,23 @@
 import * as THREE from '/js/three.module.js'
-import * as BufferGeometryUtils from './BufferGeometryUtils.js';
 const scene = new THREE.Scene();
 
-// THREE.PerspectiveCamera( FOV, aspectRatio, nearClippingPlane, farClippingPlane)
-const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500)
-
 const renderer = new THREE.WebGLRenderer()
+let camera
 
-// setSize( width, height, [false for half resolution])
-renderer.setSize(window.innerWidth, window.innerHeight)
+const resizeCanvas = () => {
+	// THREE.PerspectiveCamera( FOV, aspectRatio, nearClippingPlane, farClippingPlane)
+	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500)
+	renderer.setSize(window.innerWidth, window.innerHeight)
+}
+
+resizeCanvas()
 renderer.setClearColor( 0x282C34);
 document.body.appendChild(renderer.domElement)
+window.onresize = resizeCanvas
 
 camera.position.set(0,0,100)
 camera.lookAt(0,0,0)
 
-const inputX = document.querySelector('input#x')
-const inputY = document.querySelector('input#y')
 const inputZ = document.querySelector('input#z')
 const textOutput = document.querySelector('#pos')
 const fpsElement = document.querySelector('#fps')
@@ -32,8 +33,7 @@ function setup() {
 	const geometry = new THREE.CircleGeometry(.3, 16)
 	const material = new THREE.MeshBasicMaterial({ color: 0x424752 })
 	
-	// for (let i = 0; i <= lines; i += Math.PI * 2 / lines) {
-	for (let i = 0; i < lines; i ++) {	
+	for (let i = 0; i < lines; i ++) {
 		let column = []
 		for (let j = 0; j < 10; j++) {
 			column.push(meshIndex++)
@@ -43,8 +43,8 @@ function setup() {
 	object = new THREE.InstancedMesh(geometry, material, meshIndex)
 	scene.add(object)
 
-	window.object = object
-	window.droplets = droplets
+	camera.position.z = 93
+	camera.rotateZ(-90)
 	
 	setInterval(() => {
 		fpsElement.textContent = framerate + ' fps'
@@ -79,7 +79,7 @@ function animate() {
 	object.instanceMatrix.needsUpdate = true
 	
 	// textOutput.textContent = `${droplets[0][0]}`
-	camera.position.z = inputZ.value
+	// camera.position.z = inputZ.value
 
 	framerate++
 	renderer.render(scene, camera)
