@@ -18,47 +18,33 @@ camera.lookAt(0,0,0)
 const inputX = document.querySelector('input#x')
 const inputY = document.querySelector('input#y')
 const inputZ = document.querySelector('input#z')
-const textOutput = document.querySelector('p#pos')
-const fpsElement = document.querySelector('p#fps')
-
-function createDrop(y, size) {
-	const geometry = new THREE.CircleGeometry(size, 6)
-	const material = new THREE.MeshBasicMaterial({ color: 0x424752 })
-	const circle = new THREE.Mesh(geometry, material)
-	circle.position.set(0, y, 0)
-	circle.updateMatrix()
-	return circle
-}
-
-function updateDrop({circle, x, z }) {
-	circle.position.x = x
-	circle.position.z = z
-}
+const textOutput = document.querySelector('#pos')
+const fpsElement = document.querySelector('#fps')
 
 /** Variables globales */
 const droplets = []
+const lines = 50
 let framerate
-/** Variables para setup() */
-const totalGeometries = []
+let object
 
 function setup() {
-	const lines = 50
-	for (let i = 0; i <= lines; i += Math.PI * 2 / lines) {
-		const column = []
-		for (let j = 0; j < 10; j++) {
-			const newDrop = createDrop(j*4 -18, .3)
-			column.push(newDrop)
-			scene.add(newDrop)
-			totalGeometries.push(newDrop)
-		}
-		droplets.push({ pilMultiplier: i, column })
-	}
-
-	console.log(totalGeometries)
+	let meshIndex = 0
+	const geometry = new THREE.CircleGeometry(.3, 16)
 	const material = new THREE.MeshBasicMaterial({ color: 0x424752 })
-	// const mergedGeometry = BufferGeometryUtils.mergeBufferGeometries(totalGeometries, false)
+	
+	// for (let i = 0; i <= lines; i += Math.PI * 2 / lines) {
+	for (let i = 0; i < lines; i ++) {	
+		let column = []
+		for (let j = 0; j < 10; j++) {
+			column.push(meshIndex++)
+		}
+		droplets.push(column)
+	}
+	object = new THREE.InstancedMesh(geometry, material, meshIndex)
+	scene.add(object)
 
-	// scene.add(new THREE.Mesh(mergedGeometry, material))
+	window.object = object
+	window.droplets = droplets
 	
 	setInterval(() => {
 		fpsElement.textContent = framerate + ' fps'
@@ -67,6 +53,7 @@ function setup() {
 }
 
 /** Variables para animate() */
+const dummy = new THREE.Object3D()
 const velocidad = 0.001
 const radio = 30
 let positionInLoop = 0
@@ -74,18 +61,24 @@ let positionInLoop = 0
 function animate() {
 	requestAnimationFrame(animate)
 	positionInLoop += velocidad
+	textOutput.innerHTML = ''
 	
 	for (let i in droplets) {
-		const col = droplets[i]
-		const x = radio * Math.cos(positionInLoop + col.pilMultiplier)
-		const z = radio * Math.sin(positionInLoop + col.pilMultiplier) * 3 + 10
-		for (let j in col.column) {
-			const circle = col.column[j]
-			updateDrop({ circle, x, z })
-		}
-	}	
+		i = parseInt(i) // ????? esto me estuvo volviendo loco, resulta que i era string
+		const spacing = Math.PI * 2 / lines * i
+		const x = radio * Math.cos(positionInLoop + spacing)
+		const z = radio * Math.sin(positionInLoop + spacing) * 3 + 10
 
-	// textOutput.textContent = `${Math.floor(droplets[0][0].circle.position.x)} ${Math.floor(droplets[0][0].circle.position.y)} ${Math.floor(droplets[0][0].circle.position.z)} ${droplets[0][0].positionInLoop}`
+		for (let j in droplets[i]) {
+			const meshPosition = droplets[i][j]
+			dummy.position.set(x, j*4 -18, z)
+			dummy.updateMatrix()
+			object.setMatrixAt(meshPosition, dummy.matrix)
+		}
+	}
+	object.instanceMatrix.needsUpdate = true
+	
+	// textOutput.textContent = `${droplets[0][0]}`
 	camera.position.z = inputZ.value
 
 	framerate++
