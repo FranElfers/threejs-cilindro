@@ -7,7 +7,10 @@ let camera
 const resizeCanvas = () => {
 	// THREE.PerspectiveCamera( FOV, aspectRatio, nearClippingPlane, farClippingPlane)
 	camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 500)
-	renderer.setSize(window.innerWidth, window.innerHeight)
+	camera.position.set(0,0,93)
+	camera.lookAt(0,0,0)
+	camera.rotateZ(-90)
+	renderer.setSize(window.innerWidth+1, window.innerHeight+1)
 }
 
 resizeCanvas()
@@ -15,17 +18,11 @@ renderer.setClearColor( 0x282C34);
 document.body.appendChild(renderer.domElement)
 window.onresize = resizeCanvas
 
-camera.position.set(0,0,100)
-camera.lookAt(0,0,0)
-
-const inputZ = document.querySelector('input#z')
-const textOutput = document.querySelector('#pos')
-const fpsElement = document.querySelector('#fps')
+// camera.position.z = 93
 
 /** Variables globales */
 const droplets = []
 const lines = 50
-let framerate
 let object
 
 function setup() {
@@ -35,21 +32,12 @@ function setup() {
 	
 	for (let i = 0; i < lines; i ++) {
 		let column = []
-		for (let j = 0; j < 10; j++) {
-			column.push(meshIndex++)
-		}
+		for (let j = 0; j < 10; j++) column.push(meshIndex++)
 		droplets.push(column)
 	}
+
 	object = new THREE.InstancedMesh(geometry, material, meshIndex)
 	scene.add(object)
-
-	camera.position.z = 93
-	camera.rotateZ(-90)
-	
-	setInterval(() => {
-		fpsElement.textContent = framerate + ' fps'
-		framerate = 0
-	}, 1000)
 }
 
 /** Variables para animate() */
@@ -61,7 +49,6 @@ let positionInLoop = 0
 function animate() {
 	requestAnimationFrame(animate)
 	positionInLoop += velocidad
-	textOutput.innerHTML = ''
 	
 	for (let i in droplets) {
 		i = parseInt(i) // ????? esto me estuvo volviendo loco, resulta que i era string
@@ -78,10 +65,6 @@ function animate() {
 	}
 	object.instanceMatrix.needsUpdate = true
 	
-	// textOutput.textContent = `${droplets[0][0]}`
-	// camera.position.z = inputZ.value
-
-	framerate++
 	renderer.render(scene, camera)
 }
 
